@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #0a0a0a;
+  color: #f4f4f4;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  overflow: hidden;
+}
+
+/* ── GRAFFITI WALL BACKGROUND ─────────────────────────────────── */
+.graffiti-wall {
+  background-color: #0e0e0e;
+  background-image:
+    /* horizontal brick lines */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 28px,
+      rgba(255,255,255,0.025) 28px,
+      rgba(255,255,255,0.025) 30px
+    ),
+    /* vertical brick offsets */
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 58px,
+      rgba(255,255,255,0.018) 58px,
+      rgba(255,255,255,0.018) 60px
+    );
+}
+
+/* spray paint splatter blobs — purely CSS, no glow */
+.graffiti-wall::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 220px 120px at 8%  12%, rgba(220,38,38,0.07)   0%, transparent 70%),
+    radial-gradient(ellipse 180px 200px at 92% 8%,  rgba(234,179,8,0.06)   0%, transparent 70%),
+    radial-gradient(ellipse 260px 100px at 50% 95%, rgba(99,102,241,0.06)  0%, transparent 70%),
+    radial-gradient(ellipse 140px 180px at 15% 85%, rgba(34,197,94,0.05)   0%, transparent 70%),
+    radial-gradient(ellipse 200px 130px at 80% 60%, rgba(168,85,247,0.05)  0%, transparent 70%);
+}
+
+/* ── TYPOGRAPHY ───────────────────────────────────────────────── */
+.graffiti-text {
+  font-family: 'Bangers', cursive;
+  letter-spacing: 0.06em;
+}
+
+.graffiti-title {
+  font-family: 'Bangers', cursive;
+  letter-spacing: 0.08em;
+  /* hard offset shadow — graffiti outline, NO glow */
+  text-shadow:
+    2px  2px 0 #000,
+   -2px  2px 0 #000,
+    2px -2px 0 #000,
+   -2px -2px 0 #000,
+    3px  3px 0 rgba(245,158,11,0.5);
+}
+
+/* ── CANVAS ───────────────────────────────────────────────────── */
+canvas {
+  image-rendering: crisp-edges;
+  /* CRITICAL: no margin/padding — pointer must hit exact pixel */
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+.cursor-crosshair { cursor: crosshair !important; }
+.cursor-not-allowed { cursor: not-allowed !important; }
+
+/* Canvas wrapper border */
+.canvas-wrap-active  { border: 2px solid #f59e0b; border-radius: 8px; overflow: hidden; }
+.canvas-wrap-inactive{ border: 2px solid #3f3f46; border-radius: 8px; overflow: hidden; }
+
+/* ── WORD LETTERS ─────────────────────────────────────────────── */
+.word-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.3ch;
+  border-bottom: 2px solid currentColor;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ── SCROLLBAR ────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── ANIMATIONS ───────────────────────────────────────────────── */
+@keyframes slide-up {
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+@keyframes pop-in {
+  0%   { transform: scale(0.85); opacity: 0; }
+  70%  { transform: scale(1.04); }
+  100% { transform: scale(1);    opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(-1deg); }
+  50%       { transform: translateY(-6px) rotate(1deg); }
+}
+@keyframes blink-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.animate-slide-up  { animation: slide-up 0.18s ease forwards; }
+.animate-pop-in    { animation: pop-in   0.3s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.animate-float     { animation: float    3.5s ease-in-out infinite; }
+.animate-blink     { animation: blink-dot 1.2s ease infinite; }
