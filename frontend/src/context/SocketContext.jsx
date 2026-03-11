@@ -9,20 +9,20 @@ function uid() {
 }
 
 export function SocketProvider({ children }) {
-  const [myId, setMyId]         = useState(() => uid())
-  const [myName, setMyName]     = useState('')
+  const [myId, setMyId] = useState(() => uid())
+  const [myName, setMyName] = useState('')
   const [myAvatar, setMyAvatar] = useState(0)
-  const [room, setRoom]         = useState(null)
+  const [room, setRoom] = useState(null)
   const [messages, setMessages] = useState([])
-  const [phase, setPhase]       = useState('landing')
+  const [phase, setPhase] = useState('landing')
   const [connected, setConnected] = useState(false)
-  const [error, setError]       = useState('')
+  const [error, setError] = useState('')
 
-  const socketRef   = useRef(null)
-  const drawCbs     = useRef(new Set())
-  const clearCbs    = useRef(new Set())
-  const timerRef    = useRef(null)
-  const roundRef    = useRef(null)
+  const socketRef = useRef(null)
+  const drawCbs = useRef(new Set())
+  const clearCbs = useRef(new Set())
+  const timerRef = useRef(null)
+  const roundRef = useRef(null)
 
   const clearError = useCallback(() => setError(''), [])
 
@@ -41,7 +41,11 @@ export function SocketProvider({ children }) {
       try {
         const { io } = await import('socket.io-client')
         const BACKEND = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL) || 'http://localhost:3001'
-        const socket = io(BACKEND, { timeout: 3000, reconnectionAttempts: 3 })
+        const socket = io(BACKEND, {
+          timeout: 60000,
+          reconnectionAttempts: 10,
+          transports: ['websocket', 'polling']
+        })
 
         socket.on('connect', () => {
           if (!mounted) return
@@ -73,10 +77,10 @@ export function SocketProvider({ children }) {
             ...r,
             wordChoices: Array.isArray(r.wordChoices)
               ? r.wordChoices.map(w => {
-                  if (typeof w === 'string') return w
-                  if (w && typeof w === 'object') return String(w.word ?? w.text ?? '')
-                  return String(w ?? '')
-                }).filter(w => w.length > 0)
+                if (typeof w === 'string') return w
+                if (w && typeof w === 'object') return String(w.word ?? w.text ?? '')
+                return String(w ?? '')
+              }).filter(w => w.length > 0)
               : [],
           }
           setRoom(safe)
@@ -367,9 +371,9 @@ export function SocketProvider({ children }) {
     clearCbs.current.forEach(cb => cb())
   }, [emit, room])
 
-  const onDraw   = useCallback((cb) => { drawCbs.current.add(cb) }, [])
-  const offDraw  = useCallback((cb) => { drawCbs.current.delete(cb) }, [])
-  const onClear  = useCallback((cb) => { clearCbs.current.add(cb) }, [])
+  const onDraw = useCallback((cb) => { drawCbs.current.add(cb) }, [])
+  const offDraw = useCallback((cb) => { drawCbs.current.delete(cb) }, [])
+  const onClear = useCallback((cb) => { clearCbs.current.add(cb) }, [])
   const offClear = useCallback((cb) => { clearCbs.current.delete(cb) }, [])
 
   return (

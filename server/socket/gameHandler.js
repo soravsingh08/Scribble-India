@@ -19,7 +19,7 @@ const { saveGame } = require('../services/dbService')
 
 // ── Helper: broadcast room state to all players ───────────────────────────────
 function broadcastRoom(io, room) {
-  io.to(room.roomCode).emit('room:update', roomPayload(room))
+  io.to(room.roomCode).emit('room:update', roomPayload(room)) 
 }
 
 // ── Helper: system chat message ───────────────────────────────────────────────
