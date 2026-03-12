@@ -6,7 +6,7 @@
 module.exports = {
   PORT:       process.env.PORT       || 3001,
   NODE_ENV:   process.env.NODE_ENV   || 'development',
-  MONGO_URI:  process.env.MONGO_URI  || 'mongodb+srv://soravsync:Nb7WOMOlHVZ3MURm@practice-cluster.btpauyj.mongodb.net/scribble_india?retryWrites=true&w=majority',
+  MONGO_URI:  process.env.MONGO_URI,
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
 
   // Game settings

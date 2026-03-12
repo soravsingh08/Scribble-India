@@ -5,32 +5,35 @@
  * chat:send, draw:event, canvas:clear, room:leave
  */
 
-const ENV          = require('../config/env')
+const ENV = require('../config/env')
+
 const {
   createRoom, getRoom, deleteRoom,
   addPlayer, removePlayer,
   roomPayload, getLeaderboard,
-}                  = require('../services/gameService')
+} = require('../services/gameService')
+
 const {
   isCorrect, isClose,
   getWordChoices, getMaskedWord, getCategoryOf,
-}                  = require('../services/wordService')
+} = require('../services/wordService')
+
 const { saveGame } = require('../services/dbService')
 
 // ── Helper: broadcast room state to all players ───────────────────────────────
 function broadcastRoom(io, room) {
-  io.to(room.roomCode).emit('room:update', roomPayload(room)) 
+  io.to(room.roomCode).emit('room:update', roomPayload(room))
 }
 
 // ── Helper: system chat message ───────────────────────────────────────────────
 function sysMsg(io, roomCode, text) {
   io.to(roomCode).emit('chat:message', {
-    id:         Date.now().toString(),
-    playerId:   'system',
+    id: Date.now().toString(),
+    playerId: 'system',
     playerName: 'System',
     text,
-    type:       'system',
-    timestamp:  Date.now(),
+    type: 'system',
+    timestamp: Date.now(),
   })
 }
 
@@ -52,13 +55,13 @@ function startRound(io, room) {
   room.currentDrawerId = room.drawOrder[idx] || room.players[0].id
 
   const choices = getWordChoices()
-  room.wordChoices      = choices
-  room.currentWord      = null
-  room.currentCategory  = null
-  room.maskedWord       = null
-  room.revealedIndices  = []
-  room.phase            = 'word-select'
-  room.timeLeft         = room.drawTime
+  room.wordChoices = choices
+  room.currentWord = null
+  room.currentCategory = null
+  room.maskedWord = null
+  room.revealedIndices = []
+  room.phase = 'word-select'
+  room.timeLeft = room.drawTime
 
   broadcastRoom(io, room)
 
@@ -87,12 +90,12 @@ function beginDrawingPhase(io, room, word, category) {
   clearTimeout(room.wordSelectTimeout)
   clearInterval(room.timerInterval)
 
-  room.currentWord     = word
+  room.currentWord = word
   room.currentCategory = category || getCategoryOf(word)
-  room.maskedWord      = getMaskedWord(word, [])
+  room.maskedWord = getMaskedWord(word, [])
   room.revealedIndices = []
-  room.phase           = 'drawing'
-  room.timeLeft        = room.drawTime
+  room.phase = 'drawing'
+  room.timeLeft = room.drawTime
 
   // Tell drawer their secret word
   io.to(room.currentDrawerId).emit('room:current-word', word)
@@ -106,7 +109,7 @@ function beginDrawingPhase(io, room, word, category) {
 
   broadcastRoom(io, room)
 
-  let timeLeft  = room.drawTime
+  let timeLeft = room.drawTime
   const revealed = []
 
   room.timerInterval = setInterval(() => {
@@ -128,7 +131,7 @@ function beginDrawingPhase(io, room, word, category) {
         const pick = unrevealed[Math.floor(Math.random() * unrevealed.length)]
         revealed.push(pick)
         room.revealedIndices = [...revealed]
-        room.maskedWord      = getMaskedWord(word, revealed)
+        room.maskedWord = getMaskedWord(word, revealed)
         io.to(room.roomCode).emit('room:reveal-letter', [...revealed])
         sysMsg(io, room.roomCode, `💡 A letter has been revealed!`)
       }
@@ -150,11 +153,11 @@ function endRound(io, room) {
   room.roundHistory = room.roundHistory || []
   room.roundHistory.push({
     roundNumber: room.round,
-    word:        room.currentWord,
-    category:    room.currentCategory,
-    drawerId:    room.currentDrawerId,
-    drawerName:  drawer?.name || 'Unknown',
-    guessedBy:   room.players
+    word: room.currentWord,
+    category: room.currentCategory,
+    drawerId: room.currentDrawerId,
+    drawerName: drawer?.name || 'Unknown',
+    guessedBy: room.players
       .filter(p => p.hasGuessed)
       .map(p => ({ name: p.name })),
   })
@@ -172,7 +175,7 @@ function endRound(io, room) {
     broadcastRoom(io, room)
 
     // Save to MongoDB
-    saveGame(room).catch(() => {})
+    saveGame(room).catch(() => { })
 
     // Auto-cleanup after 5 min
     setTimeout(() => deleteRoom(room.roomCode), 5 * 60 * 1000)
@@ -204,11 +207,11 @@ function registerGameHandlers(io, socket) {
       data,
       socket.id,
       data.playerName || 'Anonymous',
-      data.avatar     ?? 0,
+      data.avatar ?? 0,
     )
     socket.join(room.roomCode)
     socket.data.roomCode = room.roomCode
-    socket.data.name     = data.playerName
+    socket.data.name = data.playerName
 
     console.log(`  [+] Room created: ${room.roomCode} by "${data.playerName}"`)
     broadcastRoom(io, room)
@@ -241,7 +244,7 @@ function registerGameHandlers(io, socket) {
 
     socket.join(code)
     socket.data.roomCode = code
-    socket.data.name     = data.playerName
+    socket.data.name = data.playerName
 
     console.log(`  [+] "${data.playerName}" joined room: ${code}`)
     sysMsg(io, code, `👋 ${player.name} joined the room!`)
@@ -282,7 +285,7 @@ function registerGameHandlers(io, socket) {
 
     // wordChoices are plain strings
     const selectedWord = (data.word || '').toString().trim().toLowerCase()
-    const validWords   = room.wordChoices.map(w =>
+    const validWords = room.wordChoices.map(w =>
       typeof w === 'string' ? w.toLowerCase() : (w.word || '').toLowerCase()
     )
 
@@ -310,12 +313,12 @@ function registerGameHandlers(io, socket) {
     // Drawer can't type guesses
     if (socket.id === room.currentDrawerId) {
       socket.emit('chat:message', {
-        id:         Date.now().toString(),
-        playerId:   'system',
+        id: Date.now().toString(),
+        playerId: 'system',
         playerName: 'System',
-        text:       "You're drawing — keep it secret! 🤫",
-        type:       'system',
-        timestamp:  Date.now(),
+        text: "You're drawing — keep it secret! 🤫",
+        type: 'system',
+        timestamp: Date.now(),
       })
       return
     }
@@ -323,12 +326,12 @@ function registerGameHandlers(io, socket) {
     // Already guessed — normal chat only
     if (player.hasGuessed) {
       io.to(room.roomCode).emit('chat:message', {
-        id:         Date.now().toString(),
-        playerId:   player.id,
+        id: Date.now().toString(),
+        playerId: player.id,
         playerName: player.name,
         text,
-        type:       'chat',
-        timestamp:  Date.now(),
+        type: 'chat',
+        timestamp: Date.now(),
       })
       return
     }
@@ -338,7 +341,7 @@ function registerGameHandlers(io, socket) {
       const pct = room.timeLeft / room.drawTime
       const pts = Math.max(ENV.GAME.MIN_SCORE, Math.floor(pct * ENV.GAME.MAX_SCORE))
 
-      player.score     += pts
+      player.score += pts
       player.hasGuessed = true
       player.roundScores = [...(player.roundScores || []), pts]
 
@@ -350,13 +353,13 @@ function registerGameHandlers(io, socket) {
       }
 
       io.to(room.roomCode).emit('chat:message', {
-        id:         Date.now().toString(),
-        playerId:   player.id,
+        id: Date.now().toString(),
+        playerId: player.id,
         playerName: player.name,
-        text:       '✅ Guessed it!',
-        type:       'correct',
+        text: '✅ Guessed it!',
+        type: 'correct',
         pts,
-        timestamp:  Date.now(),
+        timestamp: Date.now(),
       })
 
       broadcastRoom(io, room)
@@ -374,24 +377,24 @@ function registerGameHandlers(io, socket) {
     // Close guess
     if (room.phase === 'drawing' && room.currentWord && isClose(text, room.currentWord)) {
       io.to(room.roomCode).emit('chat:message', {
-        id:         Date.now().toString(),
-        playerId:   player.id,
+        id: Date.now().toString(),
+        playerId: player.id,
         playerName: player.name,
         text,
-        type:       'close',
-        timestamp:  Date.now(),
+        type: 'close',
+        timestamp: Date.now(),
       })
       return
     }
 
     // Normal message
     io.to(room.roomCode).emit('chat:message', {
-      id:         Date.now().toString(),
-      playerId:   player.id,
+      id: Date.now().toString(),
+      playerId: player.id,
       playerName: player.name,
       text,
-      type:       'chat',
-      timestamp:  Date.now(),
+      type: 'chat',
+      timestamp: Date.now(),
     })
   })
 
